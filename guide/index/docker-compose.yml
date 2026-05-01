@@ -1,0 +1,27 @@
+# Docker Compose 파일 형식 버전 (3.x 버전 사용)
+version: "3"
+
+# 컨테이너로 실행할 서비스 목록 정의
+services:
+  # WordPress 웹 애플리케이션 서비스
+  wordpress:
+    # 사용할 이미지: WordPress 5.9.1, PHP 8.1, Apache 웹서버 포함
+    image: wordpress:5.9.1-php8.1-apache
+    # WordPress 컨테이너에 전달할 환경 변수 설정
+    environment:
+      WORDPRESS_DB_HOST: mysql              # 연결할 데이터베이스 호스트명 (아래 mysql 서비스명)
+      WORDPRESS_DB_NAME: wordpress          # 사용할 데이터베이스 이름
+      WORDPRESS_DB_USER: root               # 데이터베이스 접속 사용자
+      WORDPRESS_DB_PASSWORD: password       # 데이터베이스 접속 비밀번호
+    # 포트 매핑: 호스트의 30000번 포트를 컨테이너의 80번 포트(Apache)에 연결
+    ports:
+      - "30000:80"
+
+  # MySQL 호환 데이터베이스 서비스 (MariaDB 사용)
+  mysql:
+    # 사용할 이미지: MariaDB 10.7 버전
+    image: mariadb:10.7
+    # MariaDB 컨테이너에 전달할 환경 변수 설정
+    environment:
+      MYSQL_DATABASE: wordpress             # 컨테이너 시작 시 자동 생성할 데이터베이스 이름
+      MYSQL_ROOT_PASSWORD: password         # root 계정의 비밀번호
