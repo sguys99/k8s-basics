@@ -1,58 +1,69 @@
-apiVersion: apps/v1
-kind: Deployment
+# =====================================================================
+# MySQL(MariaDB) Deployment - WordPress 데이터베이스 서버
+# =====================================================================
+apiVersion: apps/v1          # Deployment 리소스가 사용하는 API 버전
+kind: Deployment             # 리소스 종류: Pod를 생성/관리하는 Deployment
 metadata:
-  name: wordpress-mysql
+  name: wordpress-mysql      # Deployment 이름 (클러스터 내에서 식별자로 사용)
   labels:
-    app: wordpress
+    app: wordpress           # 리소스 분류용 라벨 (wordpress 앱 그룹)
 spec:
   selector:
-    matchLabels:
+    matchLabels:             # 이 Deployment가 관리할 Pod를 선택하는 조건
       app: wordpress
-      tier: mysql
-  template:
+      tier: mysql            # mysql 계층의 Pod만 관리
+  template:                  # Deployment가 생성할 Pod의 템플릿
     metadata:
-      labels:
+      labels:                # 생성되는 Pod에 부여될 라벨 (selector와 일치해야 함)
         app: wordpress
         tier: mysql
     spec:
       containers:
-        - image: mariadb:10.7
-          name: mysql
-          env:
-            - name: MYSQL_DATABASE
+        - image: mariadb:10.7        # 사용할 컨테이너 이미지 (MariaDB 10.7)
+          name: mysql                # 컨테이너 이름
+          env:                       # 컨테이너에 주입할 환경 변수
+            - name: MYSQL_DATABASE   # 초기 생성할 데이터베이스 이름
               value: wordpress
-            - name: MYSQL_ROOT_PASSWORD
+            - name: MYSQL_ROOT_PASSWORD  # root 계정 비밀번호 (실제 운영에서는 Secret 사용 권장)
               value: password
           ports:
-            - containerPort: 3306
+            - containerPort: 3306    # 컨테이너가 노출하는 포트 (MySQL 기본 포트)
               name: mysql
 
 ---
-apiVersion: v1
-kind: Service
+# =====================================================================
+# MySQL Service - WordPress가 DB에 접근하기 위한 내부 서비스
+# =====================================================================
+apiVersion: v1               # Service 리소스의 API 버전
+kind: Service                # 리소스 종류: Pod에 대한 네트워크 엔드포인트 제공
 metadata:
-  name: wordpress-mysql
+  name: wordpress-mysql      # Service 이름 (DNS 이름으로도 사용됨)
   labels:
     app: wordpress
 spec:
   ports:
-    - port: 3306
-  selector:
+    - port: 3306             # Service가 노출하는 포트 (클러스터 내부에서 접근)
+  selector:                  # 이 Service가 트래픽을 전달할 Pod 선택 조건
     app: wordpress
-    tier: mysql
+    tier: mysql              # mysql 계층의 Pod로 트래픽 전달
+  # type 미지정 시 기본값은 ClusterIP (클러스터 내부 전용)
 
 ---
+# =====================================================================
+# WordPress Deployment - WordPress 웹 애플리케이션 (프론트엔드)
+# =====================================================================
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: wordpress
+  name: wordpress            # Deployment 이름
   labels:
     app: wordpress
 spec:
+  replicas: 2
   selector:
     matchLabels:
       app: wordpress
-      tier: frontend
+      tier: frontend         # frontend 계층의 Pod 관리
   template:
     metadata:
       labels:
@@ -60,22 +71,25 @@ spec:
         tier: frontend
     spec:
       containers:
-        - image: wordpress:5.9.1-php8.1-apache
+        - image: wordpress:5.9.1-php8.1-apache  # WordPress 5.9.1 + PHP 8.1 + Apache 이미지
           name: wordpress
-          env:
-            - name: WORDPRESS_DB_HOST
-              value: wordpress-mysql
-            - name: WORDPRESS_DB_NAME
+          env:                                  # WordPress가 DB 연결에 사용할 환경 변수
+            - name: WORDPRESS_DB_HOST           # DB 호스트 (위에서 만든 Service 이름 사용)
+              value: wordpress-mysql            # → Kubernetes DNS가 Service IP로 자동 변환
+            - name: WORDPRESS_DB_NAME           # 사용할 데이터베이스 이름
               value: wordpress
-            - name: WORDPRESS_DB_USER
+            - name: WORDPRESS_DB_USER           # DB 접속 계정
               value: root
-            - name: WORDPRESS_DB_PASSWORD
+            - name: WORDPRESS_DB_PASSWORD       # DB 접속 비밀번호 (운영에서는 Secret 사용 권장)
               value: password
           ports:
-            - containerPort: 80
+            - containerPort: 80                 # WordPress(Apache)가 사용하는 HTTP 포트
               name: wordpress
 
 ---
+# =====================================================================
+# WordPress Service - 외부에서 WordPress에 접근하기 위한 서비스
+# =====================================================================
 apiVersion: v1
 kind: Service
 metadata:
@@ -83,9 +97,10 @@ metadata:
   labels:
     app: wordpress
 spec:
-  type: NodePort
+  type: NodePort             # NodePort 타입: 클러스터 노드의 포트를 통해 외부에서 접근 가능
+                             # (기본 30000-32767 범위에서 자동 할당)
   ports:
-    - port: 80
-  selector:
+    - port: 80               # Service가 노출하는 포트
+  selector:                  # 트래픽을 전달할 Pod 선택 조건
     app: wordpress
-    tier: frontend
+    tier: frontend           # frontend 계층의 WordPress Pod로 전달
