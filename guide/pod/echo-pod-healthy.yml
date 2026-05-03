@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: echo-health # Pod 이름
+  labels:
+    app: echo # Pod 라벨 (서비스/셀렉터에서 참조)
+spec:
+  containers:
+    - name: app # 컨테이너 이름
+      image: ghcr.io/subicura/echo:v1 # 사용할 컨테이너 이미지
+      livenessProbe: # 컨테이너가 살아있는지 확인 (실패 시 재시작)
+        httpGet:
+          path: / # 헬스체크 요청 경로
+          port: 3000 # 헬스체크 요청 포트
+      readinessProbe: # 트래픽을 받을 준비가 되었는지 확인 (실패 시 서비스에서 제외)
+        httpGet:
+          path: / # 헬스체크 요청 경로
+          port: 3000 # 헬스체크 요청 포트
