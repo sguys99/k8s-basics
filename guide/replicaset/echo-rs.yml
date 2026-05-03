@@ -1,0 +1,19 @@
+apiVersion: apps/v1            # ReplicaSet은 apps/v1 API 그룹에 속함
+kind: ReplicaSet               # 리소스 종류: ReplicaSet (지정한 수의 Pod 복제본 유지)
+metadata:
+  name: echo-rs                # ReplicaSet 이름
+spec:
+  replicas: 1                  # 유지할 Pod 복제본 개수
+  selector:                    # 관리할 Pod를 선택하는 라벨 셀렉터
+    matchLabels:
+      app: echo                # app=echo 라벨을 가진 Pod
+      tier: app                # tier=app 라벨을 가진 Pod
+  template:                    # ReplicaSet이 생성할 Pod 템플릿
+    metadata:
+      labels:                  # 생성되는 Pod에 부여될 라벨 (selector와 일치해야 함)
+        app: echo
+        tier: app
+    spec:
+      containers:
+        - name: echo           # 컨테이너 이름
+          image: ghcr.io/subicura/echo:v1   # 사용할 컨테이너 이미지
