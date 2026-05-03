@@ -1,0 +1,18 @@
+apiVersion: v1            # 사용할 Kubernetes API 버전
+kind: Pod                 # 리소스 종류 (Pod)
+metadata:
+  name: echo-lp           # Pod 이름 (livenessProbe 예제)
+  labels:
+    app: echo             # Pod에 부여할 라벨 (Service/Selector에서 사용)
+spec:
+  containers:
+    - name: app                         # 컨테이너 이름
+      image: ghcr.io/subicura/echo:v1   # 사용할 컨테이너 이미지
+      livenessProbe:                    # 컨테이너 생존 여부 확인 (실패 시 컨테이너 재시작)
+        httpGet:                        # HTTP GET 방식으로 헬스체크 수행
+          path: /not/exist              # 요청 경로 (의도적으로 존재하지 않는 경로 → 실패 유도)
+          port: 8080                    # 요청 포트
+        initialDelaySeconds: 5          # 컨테이너 시작 후 첫 probe 실행까지 대기 시간 (초)
+        timeoutSeconds: 2               # probe 응답 대기 타임아웃 (기본값: 1초)
+        periodSeconds: 5                # probe 실행 주기 (기본값: 10초)
+        failureThreshold: 1             # 연속 실패 임계치 (기본값: 3회) — 초과 시 컨테이너 재시작
