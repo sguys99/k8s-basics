@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: counter # Pod 이름
+  labels:
+    app: counter # Pod 라벨 (서비스/셀렉터에서 참조)
+spec:
+  containers:
+    - name: app # 애플리케이션 컨테이너 이름
+      image: ghcr.io/subicura/counter:latest # counter 애플리케이션 이미지
+      env: # 컨테이너 환경 변수 설정
+        - name: REDIS_HOST
+          value: "localhost" # 같은 Pod 내 컨테이너는 localhost로 통신 가능
+    - name: db # Redis 컨테이너 이름 (사이드카 패턴)
+      image: redis # Redis 공식 이미지
