@@ -1,0 +1,39 @@
+# Redis Deployment 정의
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis # Deployment 이름
+spec:
+  selector:
+    # 이 Deployment가 관리할 Pod를 선택하는 라벨 조건
+    matchLabels:
+      app: counter
+      tier: db
+  template:
+    # Pod 템플릿: 위 selector와 매칭되도록 동일한 라벨을 부여
+    metadata:
+      labels:
+        app: counter
+        tier: db
+    spec:
+      containers:
+        - name: redis
+          image: redis # Docker Hub의 공식 redis 이미지 사용
+          ports:
+            - containerPort: 6379 # Redis 기본 포트
+              protocol: TCP
+
+---
+# Redis Service 정의 (Pod 간 통신을 위한 내부 엔드포인트 제공)
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis # Service 이름 (다른 Pod에서 이 이름으로 접근 가능)
+spec:
+  ports:
+    - port: 6379 # Service가 노출하는 포트 (clusterIP:6379)
+      protocol: TCP
+  # 트래픽을 전달할 대상 Pod 선택 라벨
+  selector:
+    app: counter
+    tier: db
