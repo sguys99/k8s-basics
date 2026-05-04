@@ -1,0 +1,19 @@
+apiVersion: apps/v1          # Deployment 리소스의 API 버전
+kind: Deployment             # 리소스 종류: Deployment (ReplicaSet을 관리하며 롤링 업데이트 지원)
+metadata:
+  name: echo-deploy          # Deployment 이름
+spec:
+  replicas: 4                # 유지할 Pod 복제본 개수
+  selector:
+    matchLabels:             # 이 Deployment가 관리할 Pod를 선택하는 레이블 조건
+      app: echo
+      tier: app
+  template:                  # 생성될 Pod의 템플릿 정의
+    metadata:
+      labels:                # Pod에 부여할 레이블 (selector와 일치해야 함)
+        app: echo
+        tier: app
+    spec:
+      containers:            # Pod 내에서 실행할 컨테이너 목록
+        - name: echo         # 컨테이너 이름
+          image: ghcr.io/subicura/echo:v2   # 사용할 컨테이너 이미지(version2)
