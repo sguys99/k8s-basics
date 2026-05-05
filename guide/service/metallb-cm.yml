@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: metallb-system  # MetalLB 가 설치된 네임스페이스
+  name: config               # MetalLB 컨트롤러가 참조하는 ConfigMap 이름 (고정)
+data:
+  config: |
+    address-pools:           # LoadBalancer 서비스에 할당할 외부 IP 풀 정의
+    - name: default          # 주소 풀 이름 (여러 개 정의 가능)
+      protocol: layer2       # L2 모드 (ARP/NDP 응답 방식). BGP 대신 사용
+      addresses:
+      - 192.168.49.2/32      # minikube ip - LoadBalancer 서비스에 할당될 외부 IP 대역
