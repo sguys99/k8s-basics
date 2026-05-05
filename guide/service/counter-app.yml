@@ -1,0 +1,27 @@
+# Counter 애플리케이션 Deployment 정의
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: counter # Deployment 이름
+spec:
+  selector:
+    # 이 Deployment가 관리할 Pod를 선택하는 라벨 조건
+    matchLabels:
+      app: counter
+      tier: app
+  template:
+    metadata:
+      # Pod에 부여할 라벨 (위 selector와 일치해야 함)
+      labels:
+        app: counter
+        tier: app
+    spec:
+      containers:
+        - name: counter
+          image: ghcr.io/subicura/counter:latest # Counter 애플리케이션 이미지
+          # 컨테이너에 주입할 환경변수 (Redis 접속 정보)
+          env:
+            - name: REDIS_HOST
+              value: "redis" # Redis Service 이름 (DNS로 해석됨)
+            - name: REDIS_PORT
+              value: "6379" # Redis 기본 포트
